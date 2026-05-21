@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estrategia NQ 1m — Quant Alpha Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0c0e10;
+  --bg2: #111418;
+  --bg3: #171b20;
+  --bg4: #1c2128;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text: #e2e8f0;
+  --text2: #8896a8;
+  --text3: #4a5568;
+  --green: #34d399;
+  --green-dim: #0d2b1f;
+  --red: #f87171;
+  --red-dim: #2d1010;
+  --blue: #60a5fa;
+  --blue-dim: #0f1f3d;
+  --amber: #fbbf24;
+  --amber-dim: #2d1f05;
+  --purple: #a78bfa;
+  --purple-dim: #1a1035;
+  --teal: #2dd4bf;
+  --teal-dim: #082825;
+  --slate: #94a3b8;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* NAV */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(12,14,16,0.93);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  display: flex; align-items: center; height: 52px; gap: 2rem;
+}
+.nav-logo {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px; color: var(--amber); letter-spacing: .04em; white-space: nowrap;
+}
+.nav-links {
+  display: flex; gap: 0; flex: 1;
+  overflow-x: auto; scrollbar-width: none;
+}
+.nav-links::-webkit-scrollbar { display: none; }
+.nav-link {
+  font-size: 12px; color: var(--text3);
+  padding: 6px 14px; border-radius: 6px;
+  cursor: pointer; white-space: nowrap;
+  transition: color .15s, background .15s;
+  text-decoration: none;
+}
+.nav-link:hover { color: var(--text2); background: var(--bg3); }
+.nav-link.active { color: var(--amber); background: var(--amber-dim); }
+
+/* HERO */
+.hero {
+  padding: 5rem 2rem 3rem;
+  max-width: 900px; margin: 0 auto;
+}
+.hero-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: .12em; color: var(--amber);
+  text-transform: uppercase; margin-bottom: 1.2rem;
+  display: flex; align-items: center; gap: 8px;
+}
+.hero-label::before {
+  content: ''; display: inline-block;
+  width: 24px; height: 1px; background: var(--amber);
+}
+.hero h1 {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(2.2rem, 5vw, 3.6rem);
+  font-weight: 600; line-height: 1.1;
+  letter-spacing: -.02em; color: var(--text);
+  margin-bottom: 1rem;
+}
+.hero h1 em { font-style: italic; color: var(--amber); }
+.hero-desc {
+  font-size: 15px; color: var(--text2);
+  max-width: 600px; line-height: 1.7; margin-bottom: 2.5rem;
+}
+
+/* SPEC BAR */
+.spec-bar {
+  display: flex; flex-wrap: wrap; gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden;
+  margin-bottom: 3rem;
+}
+.spec-item {
+  flex: 1; min-width: 140px;
+  background: var(--bg2);
+  padding: 14px 18px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.spec-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+.spec-value {
+  font-family: 'DM Mono', monospace;
+  font-size: 15px; font-weight: 500; color: var(--text);
+}
+.spec-value.green { color: var(--green); }
+.spec-value.amber { color: var(--amber); }
+.spec-value.blue { color: var(--blue); }
+
+/* MAIN */
+main { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem; }
+
+/* SECTION */
+.section {
+  margin-bottom: 3rem;
+  scroll-margin-top: 70px;
+}
+.section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--amber);
+  margin-bottom: 6px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-label::before {
+  content: ''; display: inline-block;
+  width: 16px; height: 1px; background: var(--amber);
+}
+.section-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.5rem; font-weight: 600;
+  letter-spacing: -.01em; color: var(--text);
+  margin-bottom: 1rem;
+}
+
+/* CARD */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+  margin-bottom: 12px;
+  transition: border-color .2s;
+}
+.card:hover { border-color: var(--border2); }
+.card-header {
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+}
+.step-badge {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px; font-weight: 500;
+  flex-shrink: 0;
+}
+.card-title { font-size: 14px; font-weight: 500; color: var(--text); flex: 1; }
+.card-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; padding: 3px 9px;
+  border-radius: 4px; letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.tag-critical { background: #2d1010; color: var(--red); }
+.tag-filter { background: var(--blue-dim); color: var(--blue); }
+.tag-confirm { background: var(--purple-dim); color: var(--purple); }
+.tag-trigger { background: var(--amber-dim); color: var(--amber); }
+.card-body { padding: 16px 20px; }
+.card-desc {
+  font-size: 13px; color: var(--text2);
+  line-height: 1.7; margin-bottom: 14px;
+}
+
+/* TWO COL */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.dir-box {
+  border-radius: 10px; padding: 14px 16px;
+  border: 1px solid var(--border);
+}
+.dir-box.long { background: rgba(52,211,153,0.05); border-color: rgba(52,211,153,0.15); }
+.dir-box.short { background: rgba(248,113,113,0.05); border-color: rgba(248,113,113,0.15); }
+.dir-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: .08em;
+  text-transform: uppercase; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 6px;
+}
+.dir-label.long { color: var(--green); }
+.dir-label.short { color: var(--red); }
+.dir-item {
+  font-size: 12px; color: var(--text2);
+  padding: 3px 0; line-height: 1.5;
+  display: flex; align-items: flex-start; gap: 6px;
+}
+.dir-item::before { content: '→'; color: var(--text3); flex-shrink: 0; }
+
+/* EMA VISUAL */
+.ema-stack {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 14px 16px;
+  background: var(--bg3); border-radius: 10px;
+  border: 1px solid var(--border);
+  margin-bottom: 14px;
+}
+.ema-row {
+  display: flex; align-items: center; gap: 10px;
+}
+.ema-line {
+  height: 3px; border-radius: 2px; flex: 1;
+}
+.ema-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; width: 60px; flex-shrink: 0;
+}
+.ema-desc { font-size: 11px; color: var(--text3); }
+
+/* ZONE TABLE */
+.zone-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+.zone-table th {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--text3);
+  padding: 8px 14px; text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.zone-table td {
+  padding: 10px 14px; font-size: 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text2); vertical-align: top;
+}
+.zone-table tr:last-child td { border-bottom: none; }
+.zone-table .zone-name {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; font-weight: 500;
+  white-space: nowrap;
+}
+
+/* STOCH CONFIG */
+.stoch-config {
+  display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;
+}
+.stoch-param {
+  flex: 1; min-width: 100px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 4px;
+  align-items: center; text-align: center;
+}
+.stoch-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 28px; font-weight: 500; color: var(--purple);
+}
+.stoch-name {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+.stoch-what { font-size: 11px; color: var(--text2); line-height: 1.4; margin-top: 4px; }
+.stoch-levels {
+  display: flex; gap: 10px; margin-bottom: 14px;
+}
+.stoch-level {
+  flex: 1; border-radius: 8px; padding: 10px 14px;
+  display: flex; align-items: center; gap: 10px;
+  border: 1px solid var(--border);
+}
+.stoch-level.ob { background: rgba(248,113,113,0.06); border-color: rgba(248,113,113,0.2); }
+.stoch-level.os { background: rgba(52,211,153,0.06); border-color: rgba(52,211,153,0.2); }
+.stoch-num-sm {
+  font-family: 'DM Mono', monospace;
+  font-size: 20px; font-weight: 500;
+}
+.stoch-num-sm.red { color: var(--red); }
+.stoch-num-sm.green { color: var(--green); }
+.stoch-level-desc { font-size: 12px; color: var(--text2); line-height: 1.4; }
+
+/* EXECUTION */
+.exec-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.exec-item {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px;
+}
+.exec-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em;
+  margin-bottom: 6px;
+}
+.exec-value { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.4; }
+.exec-sub { font-size: 11px; color: var(--text2); margin-top: 4px; line-height: 1.4; }
+
+/* CHECKLIST */
+.checklist { display: flex; flex-direction: column; gap: 2px; }
+.check-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg3); border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 13px; color: var(--text2);
+  line-height: 1.5;
+}
+.check-box {
+  width: 18px; height: 18px; border-radius: 4px;
+  border: 1.5px solid var(--border2);
+  flex-shrink: 0; margin-top: 1px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .15s;
+}
+.check-box.checked {
+  background: var(--green); border-color: var(--green);
+}
+.check-box.checked::after { content: '✓'; font-size: 11px; color: #000; font-weight: 700; }
+.check-item.checked-row { background: rgba(52,211,153,0.04); border-color: rgba(52,211,153,0.15); }
+.check-item.checked-row .check-text { color: var(--text); }
+
+/* CALLOUT */
+.callout {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--amber);
+  border-radius: 0 10px 10px 0;
+  padding: 14px 18px;
+  font-size: 13px; color: var(--text2);
+  line-height: 1.65; margin: 10px 0;
+}
+.callout strong { color: var(--text); font-weight: 500; }
+.callout.red-border { border-left-color: var(--red); }
+.callout.green-border { border-left-color: var(--green); }
+
+/* RR VISUAL */
+.rr-bar {
+  display: flex; height: 36px; border-radius: 8px;
+  overflow: hidden; margin-bottom: 10px;
+  border: 1px solid var(--border);
+}
+.rr-risk {
+  background: rgba(248,113,113,0.15);
+  border-right: 2px solid var(--red);
+  display: flex; align-items: center;
+  padding: 0 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; color: var(--red);
+  width: 40%;
+}
+.rr-entry {
+  background: var(--bg3);
+  display: flex; align-items: center;
+  padding: 0 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; color: var(--text3);
+  width: 4%;
+  border-right: 2px dashed var(--text3);
+}
+.rr-reward {
+  background: rgba(52,211,153,0.1);
+  border-left: none;
+  display: flex; align-items: center;
+  padding: 0 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; color: var(--green);
+  flex: 1;
+}
+
+footer {
+  border-top: 1px solid var(--border);
+  padding: 2rem; text-align: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; color: var(--text3); letter-spacing: .06em;
+}
+
+@media (max-width: 600px) {
+  nav { padding: 0 1rem; }
+  .hero, main { padding-left: 1rem; padding-right: 1rem; }
+  .hero { padding-top: 3rem; }
+  .two-col { grid-template-columns: 1fr; }
+  .exec-grid { grid-template-columns: 1fr; }
+  .stoch-levels { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">NQ 1m · Estrategia</div>
+  <div class="nav-links">
+    <a class="nav-link active" href="#paso1">Paso 1 — EMAs</a>
+    <a class="nav-link" href="#paso2">Paso 2 — Zona</a>
+    <a class="nav-link" href="#paso3">Paso 3 — Estocástico</a>
+    <a class="nav-link" href="#paso4">Paso 4 — Gatillo</a>
+    <a class="nav-link" href="#ejecucion">Ejecución</a>
+    <a class="nav-link" href="#checklist">Checklist</a>
+  </div>
+</nav>
+
+<section class="hero" style="max-width:900px">
+  <div class="hero-label">Quant Alpha Lab · Estrategias Direccionales</div>
+  <h1>Estrategia <em>NQ 1 Minuto</em></h1>
+  <p class="hero-desc">Sistema de trading direccional sobre el futuro del NASDAQ-100. Cuatro condiciones obligatorias: filtro estructural de EMAs, zona de retroceso, confirmación de momentum estocástico y gatillo de vela envolvente. Si una condición falla, no se opera.</p>
+
+  <div class="spec-bar">
+    <div class="spec-item">
+      <span class="spec-label">Instrumento</span>
+      <span class="spec-value amber">NQ — NASDAQ-100</span>
+    </div>
+    <div class="spec-item">
+      <span class="spec-label">Temporalidad</span>
+      <span class="spec-value blue">1 Minuto</span>
+    </div>
+    <div class="spec-item">
+      <span class="spec-label">Risk / Reward</span>
+      <span class="spec-value green">1 : 1.5 fijo</span>
+    </div>
+    <div class="spec-item">
+      <span class="spec-label">Entrada</span>
+      <span class="spec-value">A mercado · cierre vela</span>
+    </div>
+    <div class="spec-item">
+      <span class="spec-label">Stop Loss</span>
+      <span class="spec-value">Último swing relevante</span>
+    </div>
+  </div>
+</section>
+
+<main>
+
+<!-- PASO 1 -->
+<div class="section" id="paso1">
+  <div class="section-label">Paso 1</div>
+  <div class="section-title">Filtro Estructural — Régimen de Mercado</div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="step-badge" style="background:var(--blue-dim);color:var(--blue);border:1px solid rgba(96,165,250,0.3)">1</div>
+      <span class="card-title">Alineación de EMAs — el filtro más importante del sistema</span>
+      <span class="card-tag tag-critical">Obligatorio</span>
+    </div>
+    <div class="card-body">
+      <div class="card-desc">Este es el primer filtro y el más importante. Define si el mercado está en un régimen operativo válido — sin alineación completa de las tres EMAs, no existe setup posible. El objetivo es operar a favor de la tendencia dominante, no en contra de ella. Las EMAs actúan como un sistema de capas que confirma la dirección.</div>
+
+      <div class="ema-stack">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Jerarquía de EMAs — tendencia alcista</div>
+        <div class="ema-row">
+          <span class="ema-label" style="color:var(--blue)">EMA 250</span>
+          <div class="ema-line" style="background:var(--blue);opacity:0.8"></div>
+          <span class="ema-desc">Tendencia dominante · por debajo del precio en alcista</span>
+        </div>
+        <div class="ema-row">
+          <span class="ema-label" style="color:var(--teal)">EMA 110</span>
+          <div class="ema-line" style="background:var(--teal);opacity:0.7;width:85%"></div>
+          <span class="ema-desc">Por encima de EMA 250</span>
+        </div>
+        <div class="ema-row">
+          <span class="ema-label" style="color:var(--amber)">EMA 50</span>
+          <div class="ema-line" style="background:var(--amber);opacity:0.9;width:70%"></div>
+          <span class="ema-desc">Por encima de EMA 110 · más cercana al precio</span>
+        </div>
+        <div class="ema-row">
+          <span class="ema-label" style="color:var(--green)">Precio</span>
+          <div class="ema-line" style="background:var(--green);width:55%"></div>
+          <span class="ema-desc">Por encima de todas las EMAs</span>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="dir-box long">
+          <div class="dir-label long">▲ Tendencia alcista válida</div>
+          <div class="dir-item">EMA 250 por debajo del precio</div>
+          <div class="dir-item">EMA 110 arriba de EMA 250</div>
+          <div class="dir-item">EMA 50 arriba de EMA 110</div>
+          <div class="dir-item">Pendientes alineadas hacia arriba</div>
+        </div>
+        <div class="dir-box short">
+          <div class="dir-label short">▼ Tendencia bajista válida</div>
+          <div class="dir-item">EMA 250 por encima del precio</div>
+          <div class="dir-item">EMA 110 debajo de EMA 250</div>
+          <div class="dir-item">EMA 50 debajo de EMA 110</div>
+          <div class="dir-item">Pendientes alineadas hacia abajo</div>
+        </div>
+      </div>
+
+      <div class="callout red-border">
+        <strong>Regla sin excepción:</strong> si no hay alineación completa de las tres EMAs con pendientes en la misma dirección, no se opera. Ni siquiera si las otras tres condiciones se cumplen. Este filtro existe para evitar operar en mercado lateral o en consolidación donde el sistema no tiene ventaja.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PASO 2 -->
+<div class="section" id="paso2">
+  <div class="section-label">Paso 2</div>
+  <div class="section-title">Zona de Retroceso</div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="step-badge" style="background:var(--teal-dim);color:var(--teal);border:1px solid rgba(45,212,191,0.3)">2</div>
+      <span class="card-title">El precio debe retroceder hacia una zona de valor — no entrar en extensión</span>
+      <span class="card-tag tag-filter">Filtro</span>
+    </div>
+    <div class="card-body">
+      <div class="card-desc">Una vez confirmado el régimen de mercado, el precio no se persigue — se espera. El precio debe retroceder hacia la zona de las EMAs antes de buscar la entrada. Esto cumple dos funciones: mejora el RR real de la operación (el stop queda más ajustado) y filtra entradas en extensión donde el riesgo es mayor.</div>
+
+      <table class="zone-table">
+        <thead>
+          <tr>
+            <th>Zona</th>
+            <th>Definición</th>
+            <th>Calidad</th>
+            <th>Notas</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="zone-name" style="color:var(--green)">★ Primaria</span></td>
+            <td>Entre EMA 50 y EMA 110</td>
+            <td style="color:var(--green)">Alta</td>
+            <td>La zona de mayor calidad. El precio está cerca de las EMAs rápidas, el setup tiene el mejor RR posible.</td>
+          </tr>
+          <tr>
+            <td><span class="zone-name" style="color:var(--amber)">Secundaria</span></td>
+            <td>Entre EMA 110 y EMA 250</td>
+            <td style="color:var(--amber)">Media</td>
+            <td>Retroceso más profundo. Válido pero el precio se ha alejado más de la tendencia inmediata.</td>
+          </tr>
+          <tr>
+            <td><span class="zone-name" style="color:var(--red)">Extendida</span></td>
+            <td>Penetración breve de EMA 250</td>
+            <td style="color:var(--red)">Baja · mayor riesgo</td>
+            <td>Válida técnicamente pero implica que la tendencia está bajo presión. Reducir tamaño de posición.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <strong>Regla de calidad:</strong> cuanto más cerca de la zona EMA 50–110, mejor el setup. La zona primaria tiene menor distancia al stop y mayor probabilidad de que el retroceso termine ahí.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PASO 3 -->
+<div class="section" id="paso3">
+  <div class="section-label">Paso 3</div>
+  <div class="section-title">Confirmación de Momentum — Estocástico</div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="step-badge" style="background:var(--purple-dim);color:var(--purple);border:1px solid rgba(167,139,250,0.3)">3</div>
+      <span class="card-title">El estocástico confirma agotamiento del retroceso — no es señal de entrada independiente</span>
+      <span class="card-tag tag-confirm">Confirmador</span>
+    </div>
+    <div class="card-body">
+      <div class="card-desc">Mientras el precio está en zona de retroceso, el estocástico debe confirmar que el momentum del retroceso se está agotando. No se usa para predecir la dirección — la dirección ya la dan las EMAs. Se usa para confirmar que el retroceso está llegando a su fin y que el precio probablemente reanudará la tendencia principal.</div>
+
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Configuración del estocástico</div>
+
+      <div class="stoch-config">
+        <div class="stoch-param">
+          <span class="stoch-num">9</span>
+          <span class="stoch-name">%K Period</span>
+          <span class="stoch-what">Período de lookback para el cálculo del estocástico principal</span>
+        </div>
+        <div class="stoch-param">
+          <span class="stoch-num">6</span>
+          <span class="stoch-name">%K Smooth</span>
+          <span class="stoch-what">Suavizado de la línea %K — reduce el ruido sin retrasar demasiado</span>
+        </div>
+        <div class="stoch-param">
+          <span class="stoch-num">2</span>
+          <span class="stoch-name">%D Period</span>
+          <span class="stoch-what">Período de la señal %D (media móvil de %K)</span>
+        </div>
+      </div>
+
+      <div class="stoch-levels">
+        <div class="stoch-level ob">
+          <span class="stoch-num-sm red">80</span>
+          <div class="stoch-level-desc"><strong style="color:var(--red)">Sobrecompra</strong> — señal para operaciones cortas (▼). El retroceso alcista sobre la tendencia bajista está agotado.</div>
+        </div>
+        <div class="stoch-level os">
+          <span class="stoch-num-sm green">20</span>
+          <div class="stoch-level-desc"><strong style="color:var(--green)">Sobreventa</strong> — señal para operaciones largas (▲). El retroceso bajista sobre la tendencia alcista está agotado.</div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <strong>Uso correcto:</strong> el estocástico en sobreventa no significa "comprar ya". Significa que el momentum del retroceso bajista se está agotando <em>mientras el precio está en zona de las EMAs</em>. La entrada la da la vela envolvente del Paso 4 — el estocástico solo confirma que el contexto es favorable.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PASO 4 -->
+<div class="section" id="paso4">
+  <div class="section-label">Paso 4</div>
+  <div class="section-title">Gatillo de Entrada — Vela Envolvente</div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="step-badge" style="background:var(--amber-dim);color:var(--amber);border:1px solid rgba(251,191,36,0.3)">4</div>
+      <span class="card-title">Las cuatro condiciones deben cumplirse simultáneamente</span>
+      <span class="card-tag tag-trigger">Gatillo</span>
+    </div>
+    <div class="card-body">
+      <div class="card-desc">La vela envolvente es el último filtro — el confirmador visual de que el precio está rechazando la zona y retomando la tendencia. Sin vela envolvente no hay entrada, aunque los tres pasos anteriores estén perfectos. <strong style="color:var(--amber)">Nunca anticipar la vela — esperar el cierre completo.</strong></div>
+
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Los 4 requisitos simultáneos</div>
+
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg3);border-radius:8px;border:1px solid var(--border)">
+          <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--blue);width:20px;flex-shrink:0">①</span>
+          <span style="font-size:13px;color:var(--text2)">EMAs alineadas correctamente en la dirección de la operación <span style="color:var(--blue)">(Paso 1 ✓)</span></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg3);border-radius:8px;border:1px solid var(--border)">
+          <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--teal);width:20px;flex-shrink:0">②</span>
+          <span style="font-size:13px;color:var(--text2)">Precio en zona de retroceso válida — primaria, secundaria o extendida <span style="color:var(--teal)">(Paso 2 ✓)</span></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg3);border-radius:8px;border:1px solid var(--border)">
+          <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--purple);width:20px;flex-shrink:0">③</span>
+          <span style="font-size:13px;color:var(--text2)">Estocástico (9,6,2) en extremo de momentum — sobrecompra o sobreventa según dirección <span style="color:var(--purple)">(Paso 3 ✓)</span></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg3);border-radius:8px;border:1px solid var(--border)">
+          <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--amber);width:20px;flex-shrink:0">④</span>
+          <span style="font-size:13px;color:var(--text2)">Vela envolvente cerrando en dirección de la tendencia, confirmando rechazo de la zona</span>
+        </div>
+      </div>
+
+      <div class="callout red-border">
+        <strong>Regla de oro:</strong> no anticipar la vela envolvente. Si entras antes del cierre y la vela no cierra como envolvente, estás operando sin gatillo. Esperar el cierre completo es no negociable — en 1 minuto los 60 segundos importan.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EJECUCIÓN -->
+<div class="section" id="ejecucion">
+  <div class="section-label">Ejecución</div>
+  <div class="section-title">Gestión de la Operación</div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="step-badge" style="background:rgba(148,163,184,0.1);color:var(--slate);border:1px solid rgba(148,163,184,0.2)">↗</div>
+      <span class="card-title">Entrada, Stop Loss y Take Profit</span>
+    </div>
+    <div class="card-body">
+
+      <div class="exec-grid" style="margin-bottom:16px">
+        <div class="exec-item">
+          <div class="exec-label">Entrada</div>
+          <div class="exec-value">A mercado</div>
+          <div class="exec-sub">Al cierre de la vela envolvente. Sin anticipar, sin orden limit.</div>
+        </div>
+        <div class="exec-item">
+          <div class="exec-label">Stop Loss</div>
+          <div class="exec-value">Último swing relevante</div>
+          <div class="exec-sub">Por encima del swing en cortos. Por debajo del swing en largos.</div>
+        </div>
+        <div class="exec-item">
+          <div class="exec-label">Take Profit</div>
+          <div class="exec-value" style="color:var(--green)">RR 1 : 1.5 fijo</div>
+          <div class="exec-sub">Calculado desde la entrada, no desde el stop.</div>
+        </div>
+      </div>
+
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Visualización del Risk/Reward 1:1.5</div>
+      <div class="rr-bar">
+        <div class="rr-risk">← SL · 1R</div>
+        <div class="rr-entry">E</div>
+        <div class="rr-reward">TP · 1.5R →</div>
+      </div>
+
+      <div class="callout green-border">
+        <strong>Lógica del RR fijo:</strong> usar un RR fijo de 1:1.5 elimina la discrecionalidad en la salida. No hay que decidir cuándo salir con ganancia — el sistema sale en 1.5R o en el stop. Con un porcentaje de acierto superior al 40%, el sistema es matemáticamente rentable a largo plazo.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CHECKLIST -->
+<div class="section" id="checklist">
+  <div class="section-label">Pre-entrada</div>
+  <div class="section-title">Checklist Operativo</div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="step-badge" style="background:rgba(52,211,153,0.1);color:var(--green);border:1px solid rgba(52,211,153,0.2)">✓</div>
+      <span class="card-title">Verificar antes de cada entrada — clic para marcar</span>
+    </div>
+    <div class="card-body">
+      <div class="card-desc" style="margin-bottom:14px">Las seis preguntas que deben responderse con SÍ antes de ejecutar. Si cualquiera es NO, no se opera.</div>
+      <div class="checklist" id="checklist-items">
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <span class="check-text">¿Las tres EMAs (50, 110, 250) están alineadas en la dirección correcta con pendientes coherentes?</span>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <span class="check-text">¿El precio ha retrocedido a zona EMA 50–110 (primaria) o EMA 110–250 (secundaria)?</span>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <span class="check-text">¿El estocástico (9, 6, 2) está en extremo — sobreventa para largos (&lt;20) o sobrecompra para cortos (&gt;80)?</span>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <span class="check-text">¿Hay vela envolvente ya cerrada en dirección de la tendencia, confirmando rechazo de la zona?</span>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <span class="check-text">¿Tengo identificado el stop loss en el último swing relevante antes de entrar?</span>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <span class="check-text">¿El take profit en RR 1:1.5 es viable sin obstáculos estructurales (soporte, resistencia, EMA mayor) en el camino?</span>
+        </div>
+      </div>
+
+      <div id="all-checked" style="display:none;margin-top:12px;padding:14px 16px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.25);border-radius:10px;font-size:13px;color:var(--green);font-weight:500">
+        ✓ Todos los filtros confirmados — setup válido para ejecutar
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<footer>
+  Quant Alpha Lab · #estrategias-direccionales · NQ 1m · Documento interno
+</footer>
+
+<script>
+// Nav highlight on scroll
+const navLinks = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('.section');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      navLinks.forEach(l => {
+        l.classList.toggle('active', l.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+sections.forEach(s => observer.observe(s));
+
+// Checklist
+function toggleCheck(item) {
+  const box = item.querySelector('.check-box');
+  const isChecked = box.classList.contains('checked');
+  if (isChecked) {
+    box.classList.remove('checked');
+    item.classList.remove('checked-row');
+  } else {
+    box.classList.add('checked');
+    item.classList.add('checked-row');
+  }
+  const all = document.querySelectorAll('.check-box');
+  const allChecked = [...all].every(b => b.classList.contains('checked'));
+  document.getElementById('all-checked').style.display = allChecked ? 'block' : 'none';
+}
+</script>
+</body>
+</html>
